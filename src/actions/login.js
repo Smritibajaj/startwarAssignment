@@ -36,7 +36,6 @@ const verifySuccess = () => {
     };
 };
 
-export const receiveFilteredMarkers = planets => ({ type: RECEIVE_FILTERED_MARKERS, planets });
 
 export const loginUser = (email, password) => dispatch => {
     dispatch(requestLogin());
