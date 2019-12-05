@@ -11,6 +11,7 @@ import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import Grid from '@material-ui/core/Grid';
+import GridContainer from './GridContainer';
 
 const styles = theme => ({
   root: {
@@ -46,6 +47,9 @@ const styles = theme => ({
 
     color: 'white',
   },
+  li:{
+    width: '100%'
+  }
 });
 
 class Home extends Component {
@@ -53,7 +57,7 @@ class Home extends Component {
     this.props.getPlanet();
   }
 
-  getfilteredValue(value){
+  getfilteredValue(value) {
     console.log(value);
     this.props.getFilterList(value);
   }
@@ -75,78 +79,21 @@ class Home extends Component {
           )}
         />
       </div>
-      
-        {(planets && filteredPlanets.length === 0) ? planets.map((planet, i) =>
-        <GridList cellHeight={200} spacing={1} className={classes.gridList}>
-          <GridListTile key={i} cols={planet.population !== "unknown" ? 2 : 1} rows={planet.population !== "unknown" ? 2 : 1} className={classes.tile}>
-            <GridListTileBar
-              title={planet.name}
-              titlePosition="top"
-              actionIcon={
-                <IconButton aria-label={`star ${planet.name}`} className={classes.icon}>
-                  <StarBorderIcon />
-                </IconButton>
-              }
-              actionPosition="left"
-              className={classes.titleBar}
-            />
-            <div className={classes.marginTop}>
-              <Typography variant="h6" gutterBottom>
-                Population : {planet.population}
-              </Typography>
-              <Typography variant="h6" gutterBottom>
-                Rotation Period : {planet.rotation_period}
-              </Typography>
-              <Typography variant="h6" gutterBottom>
-                Orbital Period : {planet.orbital_period}
-              </Typography>
-              <Typography variant="h6" gutterBottom>
-                Grounds : {planet.terrain}
-              </Typography>
-              {planet.population !== 'unknown' ? <Typography variant="h6" gutterBottom>
-                Surfacewater : {planet.surface_water}
-              </Typography> : <></>}
-            </div>
-          </GridListTile>
+
+      {(planets && !filteredPlanets[0]) ? planets.map((planet, i) =>
+          <GridList cellHeight={200} spacing={1} className={classes.gridList}>
+            <GridListTile key={planet.name} className={classes.tile} cols={planet.population !== 'unknown' ? 2 : 1} rows={planet.population !== 'unknown' ?  2 : 1}>
+            <GridContainer classes={classes} planet={planet} />
+            </GridListTile>
           </GridList>
-        ) :
+      ) : (filteredPlanets[0] !== null) ?
           <div className={classes.gridList}>
-            { filteredPlanets.map((planet, i) => 
-            <Grid item xs={12}>
-            <GridListTile key={i} className={classes.tile}> 
-            <GridListTileBar
-              title={planet.name}
-              titlePosition="top"
-              actionIcon={
-                <IconButton aria-label={`star ${planet.name}`} className={classes.icon}>
-                  <StarBorderIcon />
-                </IconButton>
-              }
-              actionPosition="left"
-              className={classes.titleBar}
-            />
-            <div className={classes.marginTop}>
-              <Typography variant="h6" gutterBottom>
-                Population : {planet.population}
-              </Typography>
-              <Typography variant="h6" gutterBottom>
-                Rotation Period : {planet.rotation_period}
-              </Typography>
-              <Typography variant="h6" gutterBottom>
-                Orbital Period : {planet.orbital_period}
-              </Typography>
-              <Typography variant="h6" gutterBottom>
-                Grounds : {planet.terrain}
-              </Typography>
-              {planet.population !== 'unknown' ? <Typography variant="h6" gutterBottom>
-                Surfacewater : {planet.surface_water}
-              </Typography> : <></>}
-            </div>
-          </GridListTile>
-          </Grid>)
+
+            {filteredPlanets.map((planet, i) => <Grid item xs={12} key={planet.diameter}><GridContainer classes={classes} planet={planet} /></Grid>
+            )
             }
-          </div>
-        }      
+          </div> : 'hello'
+      }
     </div>
     )
   }
@@ -161,10 +108,11 @@ const mapDispatchToProps = (dispatch) => {
     getPlanet() {
       dispatch(getPlanet());
     },
-    getFilterList(value){
+    getFilterList(value) {
       dispatch(receiveFilteredPlanets([value]));
     }
   }
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(Home));
+
