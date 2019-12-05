@@ -1,4 +1,6 @@
 import React, { Component } from "react";
+import { connect } from 'react-redux'
+import { getPlanet, receiveFilteredPlanets } from '../actions';
 import { withStyles } from "@material-ui/core/styles";
 import GridList from '@material-ui/core/GridList';
 import GridListTile from '@material-ui/core/GridListTile';
@@ -8,6 +10,7 @@ import StarBorderIcon from '@material-ui/icons/StarBorder';
 import Typography from '@material-ui/core/Typography';
 import TextField from '@material-ui/core/TextField';
 import Autocomplete from '@material-ui/lab/Autocomplete';
+import Grid from '@material-ui/core/Grid';
 
 const styles = theme => ({
   root: {
@@ -17,7 +20,7 @@ const styles = theme => ({
     overflow: 'hidden',
     backgroundColor: 'darkgrey',
   },
-  autocomplete : {
+  autocomplete: {
     width: '100%',
     backgroundColor: 'white',
   },
@@ -26,9 +29,10 @@ const styles = theme => ({
     height: '100%',
     // Promote the list into his own layer on Chrome. This cost memory but helps keeping high FPS.
     transform: 'translateZ(0)',
+    listStyleType: 'none',
   },
-  marginTop:{
-    margin:'3em 0 0 0'
+  marginTop: {
+    margin: '3em 0 0 0'
   },
   tile: {
     border: 'solid 1px'
@@ -39,58 +43,41 @@ const styles = theme => ({
       'rgba(0,0,0,0.3) 70%, rgba(0,0,0,0) 100%)',
   },
   icon: {
-    
+
     color: 'white',
   },
 });
 
 class Home extends Component {
-  handleItemsChange(items) {
-    console.log(items)
-  }
-
-  constructor(props) {
-    super(props)
-    this.state = {
-      filter:'all',
-      repos: []
-    }
-  }
-
   componentDidMount() {
-    let url = `/planets`
-    fetch(url).then((response) => {
-      return response.json();
-    }).then((data) => {
-      console.log(data.results)
-      this.setState({ repos: data.results })
-    }
-    );
+    this.props.getPlanet();
   }
 
+  getfilteredValue(value){
+    console.log(value);
+    this.props.getFilterList(value);
+  }
   render() {
-    const { classes } = this.props;
-    const names = this.state.repos ? this.state.repos.map(planet=>planet.name) :['all']
+    const { classes, planets, filteredPlanets } = this.props;
+    console.log(this.props.filteredPlanets)
     return (<div className={classes.root}>
       <div className={classes.autocomplete}>
-      <Autocomplete
-      id="combo-box-demo"
-      options={names}
-      defaultValue={['all']}
-      getOptionLabel={option => option}
-      style={{ width: '90%' }}
-      onChange={(event, newValue) => {
-        let filteredValue = this.state.repos.filter(planet=> planet.name===newValue);
-        this.setState({repos:filteredValue,filter:newValue})
-      }} 
-      renderInput={params => (
-        <TextField {...params} label="Planets" variant="outlined" fullWidth />
-      )}
-    />
-    </div>
-      <GridList cellHeight={200} spacing={1} className={classes.gridList}>
-        {this.state.repos ? this.state.repos.map((planet, i) =>
-
+        <Autocomplete
+          id="combo-box-demo"
+          options={planets}
+          getOptionLabel={option => option.name}
+          onChange={(event, newValue) => {
+            this.getfilteredValue(newValue);
+          }}
+          style={{ width: '100%' }}
+          renderInput={params => (
+            <TextField {...params} label="Planets" variant="outlined" fullWidth />
+          )}
+        />
+      </div>
+      
+        {(planets && filteredPlanets.length === 0) ? planets.map((planet, i) =>
+        <GridList cellHeight={200} spacing={1} className={classes.gridList}>
           <GridListTile key={i} cols={planet.population !== "unknown" ? 2 : 1} rows={planet.population !== "unknown" ? 2 : 1} className={classes.tile}>
             <GridListTileBar
               title={planet.name}
@@ -104,32 +91,80 @@ class Home extends Component {
               className={classes.titleBar}
             />
             <div className={classes.marginTop}>
-            <Typography variant="h6" gutterBottom>
-              Population : {planet.population}
-            </Typography> 
-            <Typography variant="h6" gutterBottom>
-              Rotation Period : {planet.rotation_period}
-            </Typography>
-            <Typography variant="h6" gutterBottom>
-              Orbital Period : {planet.orbital_period}
-            </Typography>
-            <Typography variant="h6" gutterBottom>
-              Grounds : {planet.terrain}
-            </Typography>
-            {planet.population !== 'unknown' ? <Typography variant="h6" gutterBottom>
-              Surfacewater : {planet.surface_water}
-            </Typography> : <></>}
-          </div>
+              <Typography variant="h6" gutterBottom>
+                Population : {planet.population}
+              </Typography>
+              <Typography variant="h6" gutterBottom>
+                Rotation Period : {planet.rotation_period}
+              </Typography>
+              <Typography variant="h6" gutterBottom>
+                Orbital Period : {planet.orbital_period}
+              </Typography>
+              <Typography variant="h6" gutterBottom>
+                Grounds : {planet.terrain}
+              </Typography>
+              {planet.population !== 'unknown' ? <Typography variant="h6" gutterBottom>
+                Surfacewater : {planet.surface_water}
+              </Typography> : <></>}
+            </div>
           </GridListTile>
-
+          </GridList>
         ) :
-          'hello'
-        }
-      </GridList>
+          <div className={classes.gridList}>
+            { filteredPlanets.map((planet, i) => 
+            <Grid item xs={12}>
+            <GridListTile key={i} className={classes.tile}> 
+            <GridListTileBar
+              title={planet.name}
+              titlePosition="top"
+              actionIcon={
+                <IconButton aria-label={`star ${planet.name}`} className={classes.icon}>
+                  <StarBorderIcon />
+                </IconButton>
+              }
+              actionPosition="left"
+              className={classes.titleBar}
+            />
+            <div className={classes.marginTop}>
+              <Typography variant="h6" gutterBottom>
+                Population : {planet.population}
+              </Typography>
+              <Typography variant="h6" gutterBottom>
+                Rotation Period : {planet.rotation_period}
+              </Typography>
+              <Typography variant="h6" gutterBottom>
+                Orbital Period : {planet.orbital_period}
+              </Typography>
+              <Typography variant="h6" gutterBottom>
+                Grounds : {planet.terrain}
+              </Typography>
+              {planet.population !== 'unknown' ? <Typography variant="h6" gutterBottom>
+                Surfacewater : {planet.surface_water}
+              </Typography> : <></>}
+            </div>
+          </GridListTile>
+          </Grid>)
+            }
+          </div>
+        }      
     </div>
-
-
     )
   }
 }
-export default withStyles(styles)(Home);
+
+const mapStateToProps = state => ({
+  planets: state.planets.planets,
+  filteredPlanets: state.planets.filteredPlanets
+});
+const mapDispatchToProps = (dispatch) => {
+  return {
+    getPlanet() {
+      dispatch(getPlanet());
+    },
+    getFilterList(value){
+      dispatch(receiveFilteredPlanets([value]));
+    }
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(Home));

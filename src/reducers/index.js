@@ -1,3 +1,4 @@
 import { combineReducers } from 'redux';
 import auth from './auth';
-export default combineReducers({auth});
+import planets from './planets';
+export default combineReducers({auth,planets});
